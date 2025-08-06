@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}База АВР{% endblock %}
+
+{% block content %}
+  <div class="mt-4">
+    <h2 class="mb-4">Список зарегистрированных АВР</h2>
+
+    <!-- 🔍 Форма фильтрации -->
+    <form method="get" class="row g-3 mb-4">
+      <div class="filtres-blocks">
+      <div class="col-md-2 filter-block">
+        <label for="date_from" class="form-label">С даты</label>
+        <input type="date" name="date_from" id="date_from" class="form-control" value="{{ selected_filters.date_from }}">
+      </div>
+      <div class="col-md-2 filter-block">
+        <label for="date_to" class="form-label">По дату</label>
+        <input type="date" name="date_to" id="date_to" class="form-control" value="{{ selected_filters.date_to }}">
+      </div>
+      <div class="col-md-2 filter-block">
+        <label for="organization" class="form-label">Организация</label>
+        <select name="organization" id="organization" class="form-select">
+          <option value="">Все</option>
+          {% for org in organizations %}
+            <option value="{{ org.id }}" {% if org.id|stringformat:"s" == selected_filters.organization %}selected{% endif %}>{{ org.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2 filter-block">
+        <label for="model" class="form-label">Модель</label>
+        <select name="model" id="model" class="form-select">
+          <option value="">Все</option>
+          {% for m in models %}
+            <option value="{{ m.id }}" {% if m.id|stringformat:"s" == selected_filters.model %}selected{% endif %}>{{ m.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2 filter-block">
+        <label for="equipment" class="form-label">Оборудование</label>
+        <select name="equipment" id="equipment" class="form-select">
+          <option value="">Все</option>
+          {% for e in equipments %}
+            <option value="{{ e.id }}" {% if e.id|stringformat:"s" == selected_filters.equipment %}selected{% endif %}>
+              Гар.№- {{ e.factory_number }} / Зав.№- {{ e.garage_number }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2 filter-block">
+        <label for="reglament" class="form-label">Вид ТО</label>
+        <select name="reglament" id="reglament" class="form-select">
+          <option value="">Все</option>
+          {% for r in reglaments %}
+            <option value="{{ r.id }}" {% if r.id|stringformat:"s" == selected_filters.reglament %}selected{% endif %}>{{ r.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      </div>
+      <div class="col-12 d-flex justify-content-end">
+        <button type="submit" class="btn btn-primary me-2">Применить фильтр</button>
+        <a href="{% url 'report_list' %}" class="btn btn-secondary clear-btn">Сбросить</a>
+      </div>
+    </form>
+
+    <!-- 📄 Таблица отчётов -->
+    <table class="table table-striped table-bordered">
+      <thead class="table-light">
+        <tr>
+          <th>Предприятие</th>          
+          <th>Номер АВР</th>         
+          <th>Дата</th>
+          <th>Время начала</th>
+          <th>Время окончания</th>
+          <th>Модель</th>
+          <th>Зав. №</th>
+          <th>Гар. №</th>
+          <th>Вид ТО</th>
+          <th>Исполнитель работ</th>
+          <th>Описание работ</th>
+          <th>PDF</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in reports %}
+          <tr>
+            <td>{{ r.service_organization }}</td>
+            <td>{{ r.service_act_number }}</td>
+            <td>{{ r.service_work_date|date:"d.m.Y"}}</td>
+            <td>{{ r.service_time_start|date:"H:i"}}</td>
+            <td>{{ r.service_time_end|date:"H:i"}}</td>            
+            <td>{{ r.equip_model.name }}</td>
+            <td>{{ r.equipment.factory_number }}</td>
+            <td>{{ r.equipment.garage_number }}</td>
+            <td>{{ r.service_reglament_work_type }}</td>            
+            <td>
+              {% for person in r.service_employer_fio.all %}
+                {{ person.full_name }}{% if not forloop.last %}, {% endif %}
+              {% endfor %}
+            </td>
+            <td>{{ r.service_work_description|truncatewords:10 }}</td>
+            <td>
+              {% if r.service_pdf_file %}
+                <a href="{{ r.service_pdf_file.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                  📄
+                </a>
+              {% else %}
+                —
+              {% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="7" class="text-center">Нет данных.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}

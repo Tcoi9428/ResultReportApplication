@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Регистрация АВР{% endblock %}
+
+{% block content %}
+  <div class="mt-4">
+    <h2 class="mb-4">Регистрация акта выполненных работ</h2>
+    <form method="post" enctype="multipart/form-data" class="needs-validation register-form" novalidate>
+      <div class="mb-3">
+        {{ form.service_organization.label_tag }}
+        {{ form.service_organization }}
+      </div>
+      <div class="mb-3">
+        <label for="id_equipment">Оборудование (зав.№/гар.№)</label>
+        <select name="equipment" id="id_equipment" class="form-control">
+          <option value="">Необходимо выбрать предприятие</option>
+        </select>
+      </div>     
+      {% csrf_token %}
+      {% for field in form %}
+        {% if field.name != 'service_organization' and field.name != 'equipment' %}
+          <div class="mb-3">
+            {{ field.label_tag }}
+            {{ field }}
+            {% if field.help_text %}
+              <div class="form-text">{{ field.help_text }}</div>
+            {% endif %}
+            {% for error in field.errors %}
+              <div class="invalid-feedback d-block">{{ error }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endfor %}
+      <button type="submit" class="btn btn-primary submit-btn">Сохранить</button>
+    </form>
+  </div>
+
+  <script>
+  document.getElementById('id_service_organization').addEventListener('change', function () {
+    const orgId = this.value;
+    const equipmentSelect = document.getElementById('id_equipment');
+    equipmentSelect.innerHTML = '<option value="">Загрузка...</option>';
+
+    fetch(`/ajax/load-equipment/?organization_id=${orgId}`)
+      .then(response => response.json())
+      .then(data => {
+        equipmentSelect.innerHTML = '<option value="">Выберите оборудование</option>';
+        data.forEach(item => {
+          const option = document.createElement('option');
+          option.value = item.id;
+          option.textContent = `Гар.№- ${item.factory_number} / Зав.№- ${item.garage_number}`;
+          equipmentSelect.appendChild(option);
+        });
+      });
+  });
+</script>
+{% endblock %}

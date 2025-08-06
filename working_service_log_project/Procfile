@@ -1,0 +1,1 @@
+web: gunicorn WORKING_SERVICE_LOG_PROJECT.wsgi
